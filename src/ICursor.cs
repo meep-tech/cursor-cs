@@ -40,8 +40,30 @@ namespace Meep.Tech.Data {
         bool Read([NotNull] T match);
 
         /// <summary>
-        /// Reads a whole string from the cursor if the next value passed the current head matches.
+        /// Try to move the cursor head forward by one if the next element matches the given value(s).
         /// </summary>
+        /// <returns>True if the head was moved past the matching element; False otherwise.</returns>
+        bool ReadNext(params T[] matches);
+
+        /// <summary>
+        /// <inheritdoc cref="ReadNext(T[])"/>
+        /// </summary>
+        /// <param name="match">The value to match against the next element of the cursor.</param>
+        /// <param name="prev">The element the cursor read over in this call. Null if there are no elements left to read.</param>
+        /// <returns>True if the head was moved past the matching element; False otherwise.</returns>
+        public bool ReadNext([NotNull] T match, [NotNullWhen(true)] out T? prev);
+
+        /// <summary>
+        /// <inheritdoc cref="ReadNext(T[])" path="/summary"/>
+        /// </summary>
+        /// <param name="prev">The element the cursor read over in this call. Null if there are no elements left to read.</param>
+        /// <param name="matches">The values to match against the current head of the cursor.</param>
+        public bool ReadNext([NotNullWhen(true)] out T? prev, params T[] matches);
+
+        /// <summary>
+        /// Try to move the cursor head forward by one if the next element matches the given value.
+        /// </summary>
+        /// <returns>True if the head was moved past the matching element; False otherwise.</returns>
         bool ReadNext([NotNull] T match);
 
         /// <summary>

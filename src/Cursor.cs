@@ -162,6 +162,35 @@ namespace Meep.Tech.Data {
             && Move(1);
 
         /// <inheritdoc />
+        public bool ReadNext([NotNull] T match, [NotNullWhen(true)] out T? prev) {
+            if(match.Equals(Next)) {
+                return Read(out prev);
+            }
+            else {
+                prev = default;
+                return false;
+            }
+        }
+
+        /// <inheritdoc />
+        public bool ReadNext([NotNullWhen(true)] out T? prev, params T[] matches) {
+            if(matches.Contains(Next)) {
+                return Read(out prev);
+            }
+            else {
+                prev = default;
+                return false;
+            }
+        }
+
+        /// <inheritdoc />
+        public bool ReadNext(params T[] matches)
+            => matches.Length == 0
+                ? Move(1)
+                : matches.Contains(Next)
+                    && Move(1);
+
+        /// <inheritdoc />
         public void Skip(int count = 1)
             => Move(count);
 
