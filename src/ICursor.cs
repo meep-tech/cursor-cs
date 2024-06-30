@@ -1,14 +1,27 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 
-namespace Meep.Tech.Data {
+namespace Meep.Tech.Collections {
 
     /// <summary>
     /// A Lazy reader with multi-peek and rewind capabilities.
-    /// <para>Cursors use a 'Head' to keep track of the current position while reading through the source, and a 'Memory' buffer to store previously read values.</para>
+    /// <para>
+    ///     - Cursors use a 'Head' to keep track of the current position 
+    ///     while reading through the source, and a 'Memory' buffer to
+    ///     store previously read values. 
+    /// </para>
+    /// <para>
+    ///     - Unless no text is provided; a cursor will always begin 
+    ///     pre-initalized at  position 0, with  the first element poised 
+    ///     to be read. If the source is empty, the cursor will be 
+    ///     positioned at -1 instead to indicate that the cursor could
+    ///     not initialize itself to the first element of the input.
+    /// </para>
     /// </summary>
     public interface ICursor<T>
         : IReadOnlyCursor<T>
         where T : notnull {
+
+        #region Read [Next]
 
         /// <summary>
         /// Moves the cursor head to the next element in the source, and returns the previous one.
@@ -66,20 +79,35 @@ namespace Meep.Tech.Data {
         /// <returns>True if the head was moved past the matching element; False otherwise.</returns>
         bool ReadNext([NotNull] T match);
 
-        /// <summary>
-        /// Move the cursor head forward by a specified number of elements.
-        /// </summary>
-        void Skip(int count = 1);
+        #endregion
 
-        /// <summary>
-        /// Move the cursor head back by a specified number of elements.
-        /// </summary>
-        void Rewind(int offset = 1);
+        #region Move [Next], Skip, and Rewind
 
         /// <summary>
         /// Move the cursor head in either direction by a specified number of elements.
         /// </summary>
         /// <param name="offset">A positive or negative number of elements to move the cursor head forward or back.</param>
+        /// <returns>True if the operation was successful; False if the cursor could not move the desired amount (0 always should result in true).</returns>
         bool Move(int offset);
+
+        /// <summary>
+        /// Move the cursor head forward by one to the next element in the source.
+        /// </summary>
+        /// <returns>True if the cursor was able to move; False if the cursor has reached the end of the source.</returns>
+        bool MoveNext();
+
+        /// <summary>
+        /// Move the cursor head forward by a specified number of elements.
+        /// <para>- Alias for <see cref="Move(int)"/> with a positive offset.</para>
+        /// </summary>
+        void Skip(int count = 1);
+
+        /// <summary>
+        /// Move the cursor head back by a specified number of elements.
+        /// <para>- Alias for <see cref="Move(int)"/> with the offset applied negatively.</para>
+        /// </summary>
+        void Rewind(int offset = 1);
+
+        #endregion
     }
 }

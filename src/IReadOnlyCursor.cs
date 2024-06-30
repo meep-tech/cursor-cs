@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Diagnostics.CodeAnalysis;
 
-namespace Meep.Tech.Data {
+namespace Meep.Tech.Collections {
 
     /// <summary>
     /// A Read-Only interface for a Cursor.

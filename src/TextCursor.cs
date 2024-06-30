@@ -2,7 +2,7 @@
 
 using Meep.Tech.Text;
 
-namespace Meep.Tech.Data {
+namespace Meep.Tech.Collections {
 
     /// <summary>
     /// A cursor designed for reading text organized into lines.
@@ -49,13 +49,13 @@ namespace Meep.Tech.Data {
             if(!base.Move(offset)) {
                 return false;
             }
-            else if(offset == 0) {
+            else if(offset is 0) {
                 return true;
             }
 
             if(offset > 0) {
                 for(int i = oldPosition; i < Position; i++) {
-                    if(Memory[i] == '\n') {
+                    if(Memory[i] is '\n') {
                         Line++;
                         Column = 0;
                     }
@@ -66,7 +66,7 @@ namespace Meep.Tech.Data {
             }
             else {
                 for(int i = oldPosition; i > Position; i--) {
-                    if(Memory[i] == '\n') {
+                    if(Memory[i] is '\n') {
                         Line--;
                         Column = 0;
                     }

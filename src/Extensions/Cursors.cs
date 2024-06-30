@@ -1,4 +1,4 @@
-﻿namespace Meep.Tech.Data {
+﻿namespace Meep.Tech.Collections {
 
     /// <summary>
     /// Utility methods for Cursors.

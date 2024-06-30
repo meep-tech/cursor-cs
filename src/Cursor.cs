@@ -1,12 +1,9 @@
 ﻿using System.Collections;
 using System.Diagnostics.CodeAnalysis;
 
-namespace Meep.Tech.Data {
+namespace Meep.Tech.Collections {
 
-    /// <summary>
-    /// A Lazy reader with multi-peek and rewind capabilities.
-    /// <para>Cursors use a 'Head' to keep track of the current position while reading through the source, and a 'Memory' buffer to store previously read values.</para>
-    /// </summary>
+    /// <inheritdoc cref="ICursor{T}"/>
     public class Cursor<T>
         : ICursor<T>
         where T : notnull {
@@ -96,7 +93,7 @@ namespace Meep.Tech.Data {
         }
 
         /// <inheritdoc />
-        public T? Peek(int offset) {
+        public virtual T? Peek(int offset) {
             int peekIndex = Position + offset;
             if(peekIndex < 0) {
                 return default;
@@ -221,6 +218,10 @@ namespace Meep.Tech.Data {
             Position = nextIndex;
             return true;
         }
+
+        /// <inheritdoc />
+        public bool MoveNext()
+            => Move(1);
 
         /// <inheritdoc />
         public IEnumerator<T> GetEnumerator(bool withCurrent = true, bool withPrevious = false) {
