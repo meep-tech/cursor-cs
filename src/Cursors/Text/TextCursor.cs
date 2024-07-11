@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using System.Text;
 
 using Meep.Tech.Text;
 
@@ -8,33 +9,68 @@ namespace Meep.Tech.Collections {
     /// A cursor designed for reading text organized into lines.
     /// </summary>
     /// <param name="source">The enumerable to read though.</param>
-    public class TextCursor(IEnumerable<char> source)
-        : Cursor<char>(source) {
+    public partial class TextCursor(IEnumerable<char> source)
+        : Cursor<char>(source),
+            ITextCursor<char> {
 
-        /// <summary>
-        /// The current line number of the cursor.
-        /// </summary>
+        #region Private Fields
+
+        private string? _full;
+
+        #endregion
+
+        /// <inheritdoc />
+        public new Location Position
+            => new(Index, Line, Column);
+
+        /// <inheritdoc />
         public int Line { get; internal set; }
             = 0;
 
-        /// <summary>
-        /// The column index of the cursor within the current line.
-        /// </summary>
-        /// <value></value>
+        /// <inheritdoc />
         public int Column { get; internal set; }
             = 0;
 
-        /// <summary>
-        /// If the cursor is at the start of a line.
-        /// </summary>
+        /// <inheritdoc />
         public bool IsStartOfLine
             => Column == 0;
 
-        /// <summary>
-        /// TODO: Split into FullText and ReadText
-        /// </summary>
-        public string Text
-            => new([.. Memory]);
+        /// <inheritdoc />
+        public string Text {
+            get {
+                if(_full is null) {
+                    if(IsAtEnd) {
+                        return _full = new([.. Memory]);
+                    }
+                    else {
+                        StringBuilder full = new(Memory.Join());
+                        int ahead = 1;
+                        while(!IsAtEnd) {
+                            full.Append(Peek(ahead++));
+                        }
+
+                        return _full = full.ToString();
+                    }
+                }
+                else {
+                    return _full;
+                }
+            }
+        }
+
+        #region Protected Overrides
+
+        /// <inheritdoc />
+        protected override Func<Cursor<char>> Cloner
+            => () => new TextCursor(_source.AsEnumerable()) {
+                Index = Index,
+                Line = Line,
+                Column = Column,
+                HasReachedEnd = HasReachedEnd,
+                Memory = _buffer
+            };
+
+        #endregion
 
         /// <summary>
         /// Creates a new TextCursor for a reader.
@@ -44,7 +80,7 @@ namespace Meep.Tech.Collections {
 
         /// <inheritdoc />
         public override bool Move(int offset) {
-            int oldPosition = Position;
+            int oldPosition = Index;
 
             if(!base.Move(offset)) {
                 return false;
@@ -54,7 +90,7 @@ namespace Meep.Tech.Collections {
             }
 
             if(offset > 0) {
-                for(int i = oldPosition; i < Position; i++) {
+                for(int i = oldPosition; i < Index; i++) {
                     if(Memory[i] is '\n') {
                         Line++;
                         Column = 0;
@@ -65,7 +101,7 @@ namespace Meep.Tech.Collections {
                 }
             }
             else {
-                for(int i = oldPosition; i > Position; i--) {
+                for(int i = oldPosition; i > Index; i--) {
                     if(Memory[i] is '\n') {
                         Line--;
                         Column = 0;
@@ -79,12 +115,7 @@ namespace Meep.Tech.Collections {
             return true;
         }
 
-        /// <summary>
-        /// Reads a whole string from the cursor if the source at the current head matches the given string.
-        /// </summary>
-        /// <remarks>
-        /// <seealso cref="Cursor{T}.Read(T)"/>
-        /// </remarks>
+        /// <inheritdoc />
         public bool Read([NotNull] string match) {
             if(match.Length == 0) {
                 return Move(1);
@@ -108,12 +139,7 @@ namespace Meep.Tech.Collections {
             return Move(match.Length);
         }
 
-        /// <summary>
-        /// Reads a whole string from the cursor if the source after the next char matches the given string.
-        /// </summary>
-        /// <remarks>
-        /// <seealso cref="Cursor{T}.ReadNext(T)"/>
-        /// </remarks>
+        /// <inheritdoc cref="Cursor{T}.Read(T)"/>
         public bool ReadNext([NotNull] string match) {
             if(match.Length == 0) {
                 return Move(1);
@@ -136,5 +162,16 @@ namespace Meep.Tech.Collections {
 
             return Move(match.Length);
         }
+
+        /// <inheritdoc cref="Cursor{T}.Clone"/>
+        public TextCursor Clone()
+            => Clone<TextCursor>();
+
+        #region Explicit Interface Implementations
+
+        ILocation IReadOnlyTextCursor<char>.Position
+            => Position;
+
+        #endregion
     }
 }

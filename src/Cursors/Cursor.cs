@@ -4,37 +4,41 @@ using System.Diagnostics.CodeAnalysis;
 namespace Meep.Tech.Collections {
 
     /// <inheritdoc cref="ICursor{T}"/>
-    public class Cursor<T>
+    public partial class Cursor<T>
         : ICursor<T>
         where T : notnull {
 
         #region Private Fields
 
-        private readonly IEnumerator<T> _source;
+        internal readonly IEnumerator<T> _source;
 
-        private readonly List<T> _buffer = [];
+        internal readonly List<T> _buffer = [];
 
         #endregion
 
         /// <inheritdoc />
-        public int Position { get; internal set; }
+        public int Index { get; internal set; }
             = 0;
+
+        /// <inheritdoc cref="IReadOnlyCursor{T}.Position"/>
+        public Cursor.Location Position
+            => new(Index);
 
         /// <inheritdoc />
         public bool IsAtStart
-            => Position < 1;
+            => Index < 1;
 
         /// <inheritdoc />
         public bool IsAtEnd
             => HasReachedEnd
-            && Position == _buffer.Count;
+            && Index == _buffer.Count;
 
         /// <inheritdoc />
         public bool HasMoved
             => _buffer.Count > 1;
 
         /// <inheritdoc />
-        public bool HasReachedEnd { get; private set; }
+        public bool HasReachedEnd { get; internal set; }
             = false;
 
         /// <inheritdoc />
@@ -43,7 +47,7 @@ namespace Meep.Tech.Collections {
 
         /// <inheritdoc />
         public T Current
-            => _buffer[Position];
+            => _buffer[Index];
 
         /// <inheritdoc />
         public T? Next
@@ -51,17 +55,27 @@ namespace Meep.Tech.Collections {
 
         /// <inheritdoc />
         public bool SourceIsEmpty
-            => Position == -1;
+            => Index == -1;
 
         /// <inheritdoc />
         public IReadOnlyList<T> Memory {
             get => _buffer;
-            private init => _buffer.AddRange(value);
+            internal init => _buffer.AddRange(value);
         }
 
         /// <inheritdoc />
         public int Buffer
-            => _buffer.Count - Position;
+            => _buffer.Count - Index;
+
+        /// <summary>
+        /// Clones this cursor to create a new cursor with the same source and state.
+        /// </summary>
+        protected virtual Func<Cursor<T>> Cloner
+            => () => new(_source.AsEnumerable()) {
+                Index = Index,
+                HasReachedEnd = HasReachedEnd,
+                Memory = _buffer
+            };
 
         /// <summary>
         /// Used to peek around the current head of the cursor.
@@ -88,13 +102,13 @@ namespace Meep.Tech.Collections {
                 _buffer.Add(_source.Current);
             }
             else {
-                Position = -1;
+                Index = -1;
             }
         }
 
         /// <inheritdoc />
         public virtual T? Peek(int offset) {
-            int peekIndex = Position + offset;
+            int peekIndex = Index + offset;
             if(peekIndex < 0) {
                 return default;
             }
@@ -201,7 +215,7 @@ namespace Meep.Tech.Collections {
                 return true;
             }
 
-            int nextIndex = Position + offset;
+            int nextIndex = Index + offset;
             if(nextIndex < 0) {
                 return false;
             }
@@ -215,7 +229,7 @@ namespace Meep.Tech.Collections {
                 _buffer.Add(_source.Current);
             }
 
-            Position = nextIndex;
+            Index = nextIndex;
             return true;
         }
 
@@ -226,7 +240,7 @@ namespace Meep.Tech.Collections {
         /// <inheritdoc />
         public IEnumerator<T> GetEnumerator(bool withCurrent = true, bool withPrevious = false) {
             if(withPrevious) {
-                foreach(T? item in _buffer[..Position]) {
+                foreach(T? item in _buffer[..Index]) {
                     yield return item;
                 }
             }
@@ -237,26 +251,29 @@ namespace Meep.Tech.Collections {
 
             while(Read()) {
                 _buffer.Add(Current!);
-                Position++;
+                Index++;
                 yield return Next!;
             }
         }
 
-        /// <inheritdoc />
-        public virtual Cursor<T> Clone()
-            => new(_source) {
-                Position = Position,
-                HasReachedEnd = HasReachedEnd,
-                Memory = _buffer
-            };
+        /// <inheritdoc cref="IReadOnlyCursor{T}.Clone"/>
+        public TCursor Clone<TCursor>()
+            where TCursor : Cursor<T>
+            => (TCursor)Cloner();
 
         #region Explicit Implementations
 
         int IReadOnlyCollection<T>.Count
+            => Index;
+
+        Cursor.ILocation IReadOnlyCursor<T>.Position
             => Position;
 
         T IReadOnlyList<T>.this[int index]
             => this[index] ?? throw new IndexOutOfRangeException();
+
+        Cursor<T> IReadOnlyCursor<T>.Clone()
+            => Cloner();
 
         IEnumerator IEnumerable.GetEnumerator()
             => GetEnumerator();

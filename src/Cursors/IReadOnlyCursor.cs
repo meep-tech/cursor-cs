@@ -15,7 +15,12 @@ namespace Meep.Tech.Collections {
         /// <summary>
         /// The current index of the cursor 'Head' within the source.
         /// </summary>
-        int Position { get; }
+        int Index { get; }
+
+        /// <summary>
+        /// The current location of the cursor within the source.
+        /// </summary>
+        Cursor.ILocation Position { get; }
 
         /// <summary>
         /// If the cursor has ever been moved from the start of the source.
@@ -102,7 +107,7 @@ namespace Meep.Tech.Collections {
         IEnumerator<T> GetEnumerator(bool withCurrent = true, bool withPrevious = false);
 
         /// <summary>
-        /// Creates a copy of this cursor with the head at the same position.
+        /// Splits the cursor into a new cursor at the current head position. 
         /// </summary>
         new Cursor<T> Clone();
 

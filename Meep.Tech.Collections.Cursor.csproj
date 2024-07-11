@@ -1,5 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+  <ItemGroup>
+    <ProjectReference Include="..\Meep.Tech.Extensions.Collections\Meep.Tech.Extensions.Collections.csproj" />
+    <ProjectReference Include="..\Meep.Tech.Extensions.Text\Meep.Tech.Extensions.Text.csproj" />
+  </ItemGroup>
+
   <PropertyGroup>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <TargetFramework>net8.0</TargetFramework>
