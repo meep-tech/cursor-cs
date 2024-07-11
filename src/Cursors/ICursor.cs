@@ -109,5 +109,39 @@ namespace Meep.Tech.Collections {
         void Rewind(int offset = 1);
 
         #endregion
+
+        #region Move(to) and Reset
+
+        /// <summary>
+        /// Reset the cursor to the beginning of the source, or to a specified location.
+        /// </summary>
+        void Reset(Cursor.ILocation? toLocation = null);
+
+        /// <summary>
+        /// <inheritdoc cref="Move(Cursor.ILocation, int)"/>
+        /// </summary>
+        /// <param name="index">The index to move the cursor head to.</param>
+        /// <param name="withOffset"><inheritdoc cref="MoveTo(Cursor.ILocation, int)" path="/param[@name='withOffset']"/></param>
+        bool MoveTo(int index, int withOffset = 0);
+
+        /// <summary>
+        /// <inheritdoc cref="Move(Cursor.ILocation, int)"/>
+        /// </summary>
+        /// <param name="position">The location to move the cursor head to.</param>
+        /// <param name="withOffset">A positive or negative number of elements to move the cursor head forward or back.</param>
+        bool MoveTo(Cursor.ILocation position, int withOffset = 0);
+
+        /// <summary>
+        /// Move the cursor head to a specified location in the source, with an optional offset.
+        /// </summary>
+        /// <param name="to">The location to move the cursor head to.</param>
+        /// <param name="offset">A positive or negative number of elements to move the cursor head forward or back.</param>
+        /// <returns>True if the operation was successful; False if the cursor could not move the desired amount (0 always should result in true).</returns>
+        bool Move(Cursor.ILocation to, int offset = 0);
+
+        /// <inheritdoc cref="Move(Cursor.ILocation, int)"/>
+        bool Move(int offset = 0, int to = 0);
+
+        #endregion
     }
 }

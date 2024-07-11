@@ -115,6 +115,33 @@ namespace Meep.Tech.Collections {
             return true;
         }
 
+        /// <inheritdoc cref="Cursor{T}.MoveTo(Cursor.ILocation, int)"/>
+        public bool MoveTo(ILocation position, int withOffset = 0) {
+            int index
+                = position.Index
+                + withOffset;
+
+            if(index < 0) {
+                return false;
+            }
+            else if(Memory.Count <= position.Index) {
+                return Move(index - Index);
+            }
+            else {
+                Index = position.Index;
+                Column = position.Column;
+                Line = position.Line;
+
+                return true;
+            }
+        }
+
+        /// <inheritdoc cref="Cursor{T}.MoveTo(Cursor.ILocation, int)"/>
+        public override bool MoveTo(Cursor.ILocation position, int withOffset = 0)
+            => position is ILocation location
+                ? MoveTo(location, withOffset)
+                : base.MoveTo(position, withOffset);
+
         /// <inheritdoc />
         public bool Read([NotNull] string match) {
             if(match.Length == 0) {

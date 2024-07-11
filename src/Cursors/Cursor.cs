@@ -238,6 +238,41 @@ namespace Meep.Tech.Collections {
             => Move(1);
 
         /// <inheritdoc />
+        public void Reset(Cursor.ILocation? toLocation = null)
+            => Move(to: toLocation);
+
+        /// <inheritdoc />
+        public virtual bool MoveTo(Cursor.ILocation position, int withOffset = 0) {
+            int index
+                = position.Index
+                + withOffset;
+
+            if(index < 0) {
+                return false;
+            }
+            else if(Memory.Count <= index) {
+                return Move(index - Index);
+            }
+            else {
+                Index = position.Index;
+
+                return true;
+            }
+        }
+
+        /// <inheritdoc />
+        public bool MoveTo(int index, int withOffset = 0)
+            => MoveTo(new Cursor.Location(index), withOffset);
+
+        /// <inheritdoc />
+        public bool Move(Cursor.ILocation to, int offset = 0)
+            => MoveTo(to, offset);
+
+        /// <inheritdoc />
+        public bool Move(int offset = 0, int to = 0)
+            => MoveTo(to, offset);
+
+        /// <inheritdoc />
         public IEnumerator<T> GetEnumerator(bool withCurrent = true, bool withPrevious = false) {
             if(withPrevious) {
                 foreach(T? item in _buffer[..Index]) {
