@@ -242,9 +242,9 @@ namespace Meep.Tech.Collections {
             => Move(to: toLocation);
 
         /// <inheritdoc />
-        public virtual bool MoveTo(Cursor.ILocation position, int withOffset = 0) {
+        public virtual bool MoveTo(Cursor.ILocation? position, int withOffset = 0) {
             int index
-                = position.Index
+                = (position?.Index ?? 0)
                 + withOffset;
 
             if(index < 0) {
@@ -254,9 +254,10 @@ namespace Meep.Tech.Collections {
                 return Move(index - Index);
             }
             else {
-                Index = position.Index;
+                Index = position?.Index ?? 0;
 
-                return true;
+                return withOffset == 0
+                    || Move(withOffset);
             }
         }
 
@@ -265,7 +266,7 @@ namespace Meep.Tech.Collections {
             => MoveTo(new Cursor.Location(index), withOffset);
 
         /// <inheritdoc />
-        public bool Move(Cursor.ILocation to, int offset = 0)
+        public bool Move(Cursor.ILocation? to, int offset = 0)
             => MoveTo(to, offset);
 
         /// <inheritdoc />

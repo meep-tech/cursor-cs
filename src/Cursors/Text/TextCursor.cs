@@ -39,13 +39,13 @@ namespace Meep.Tech.Collections {
         public string Text {
             get {
                 if(_full is null) {
-                    if(IsAtEnd) {
+                    if(HasReachedEnd) {
                         return _full = new([.. Memory]);
                     }
                     else {
                         StringBuilder full = new(Memory.Join());
                         int ahead = 1;
-                        while(!IsAtEnd) {
+                        while(!HasReachedEnd) {
                             full.Append(Peek(ahead++));
                         }
 
@@ -116,7 +116,11 @@ namespace Meep.Tech.Collections {
         }
 
         /// <inheritdoc cref="Cursor{T}.MoveTo(Cursor.ILocation, int)"/>
-        public bool MoveTo(ILocation position, int withOffset = 0) {
+        public bool MoveTo(ILocation? position, int withOffset = 0) {
+            if(position is null) {
+                return MoveTo(0, withOffset);
+            }
+
             int index
                 = position.Index
                 + withOffset;
@@ -124,7 +128,7 @@ namespace Meep.Tech.Collections {
             if(index < 0) {
                 return false;
             }
-            else if(Memory.Count <= position.Index) {
+            else if(Memory.Count <= index) {
                 return Move(index - Index);
             }
             else {
@@ -132,12 +136,13 @@ namespace Meep.Tech.Collections {
                 Column = position.Column;
                 Line = position.Line;
 
-                return true;
+                return withOffset == 0
+                    || Move(withOffset);
             }
         }
 
         /// <inheritdoc cref="Cursor{T}.MoveTo(Cursor.ILocation, int)"/>
-        public override bool MoveTo(Cursor.ILocation position, int withOffset = 0)
+        public override bool MoveTo(Cursor.ILocation? position, int withOffset = 0)
             => position is ILocation location
                 ? MoveTo(location, withOffset)
                 : base.MoveTo(position, withOffset);
