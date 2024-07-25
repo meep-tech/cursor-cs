@@ -24,11 +24,11 @@ namespace Meep.Tech.Collections {
             => new(Index, Line, Column);
 
         /// <inheritdoc />
-        public int Line { get; internal set; }
+        public int Line { get; private set; }
             = 0;
 
         /// <inheritdoc />
-        public int Column { get; internal set; }
+        public int Column { get; private set; }
             = 0;
 
         /// <inheritdoc />
@@ -61,14 +61,17 @@ namespace Meep.Tech.Collections {
         #region Protected Overrides
 
         /// <inheritdoc />
-        protected override Func<Cursor<char>> Cloner
-            => () => new TextCursor(_source.AsEnumerable()) {
-                Index = Index,
-                Line = Line,
-                Column = Column,
-                HasReachedEnd = HasReachedEnd,
-                Memory = _buffer
-            };
+        protected override Func<Cursor<char>> CloneConstructor
+            => () => new TextCursor(Rest);
+
+        /// <inheritdoc />
+        public override TCursor Clone<TCursor>() {
+            TextCursor cursor = base.Clone<TextCursor>();
+            cursor.Line = Line;
+            cursor.Column = Column;
+
+            return (TCursor)(object)cursor;
+        }
 
         #endregion
 
@@ -132,12 +135,16 @@ namespace Meep.Tech.Collections {
                 return Move(index - Index);
             }
             else {
-                Index = position.Index;
-                Column = position.Column;
-                Line = position.Line;
+                if(base.MoveTo(position)) {
+                    Column = position.Column;
+                    Line = position.Line;
 
-                return withOffset == 0
-                    || Move(withOffset);
+                    return withOffset == 0
+                        || Move(withOffset);
+                }
+                else {
+                    return false;
+                }
             }
         }
 
@@ -194,6 +201,14 @@ namespace Meep.Tech.Collections {
 
             return Move(match.Length);
         }
+
+        /// <summary>
+        /// Skips to the next non-whitespace character.
+        /// </summary> 
+        public bool SkipWhitespace(bool skipNulls = true)
+            => skipNulls
+                ? Skip(char.IsWhiteSpace)
+                : Skip(CharExtensions.IsWhiteSpaceOrNull);
 
         /// <inheritdoc cref="Cursor{T}.Clone"/>
         public TextCursor Clone()

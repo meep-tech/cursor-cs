@@ -10,14 +10,20 @@ namespace Meep.Tech.Collections {
 
         #region Private Fields
 
-        internal readonly IEnumerator<T> _source;
+        private readonly IEnumerator<T> _source;
 
-        internal readonly List<T> _buffer = [];
+        private List<T> _buffer = [];
 
         #endregion
 
+        /// <summary>
+        /// The remaining source of the cursor; as an enumerable.
+        /// </summary>
+        protected IEnumerable<T> Rest
+            => _source.AsEnumerable();
+
         /// <inheritdoc />
-        public int Index { get; internal set; }
+        public int Index { get; private set; }
             = 0;
 
         /// <inheritdoc cref="IReadOnlyCursor{T}.Position"/>
@@ -38,7 +44,7 @@ namespace Meep.Tech.Collections {
             => _buffer.Count > 1;
 
         /// <inheritdoc />
-        public bool HasReachedEnd { get; internal set; }
+        public bool HasReachedEnd { get; private set; }
             = false;
 
         /// <inheritdoc />
@@ -60,7 +66,9 @@ namespace Meep.Tech.Collections {
         /// <inheritdoc />
         public IReadOnlyList<T> Memory {
             get => _buffer;
-            internal init => _buffer.AddRange(value);
+            internal set => _buffer = value is List<T> list
+                ? list
+                : [.. value];
         }
 
         /// <inheritdoc />
@@ -68,14 +76,10 @@ namespace Meep.Tech.Collections {
             => _buffer.Count - Index;
 
         /// <summary>
-        /// Clones this cursor to create a new cursor with the same source and state.
+        /// Clone constructor.
         /// </summary>
-        protected virtual Func<Cursor<T>> Cloner
-            => () => new(_source.AsEnumerable()) {
-                Index = Index,
-                HasReachedEnd = HasReachedEnd,
-                Memory = _buffer
-            };
+        protected virtual Func<Cursor<T>> CloneConstructor
+            => () => new Cursor<T>(Rest);
 
         /// <summary>
         /// Used to peek around the current head of the cursor.
@@ -202,8 +206,19 @@ namespace Meep.Tech.Collections {
                     && Move(1);
 
         /// <inheritdoc />
-        public void Skip(int count = 1)
+        public bool Skip(int count = 1)
             => Move(count);
+
+        /// <inheritdoc />
+        public bool Skip(Func<T, bool> predicate) {
+            bool moved = false;
+            while(predicate(Current)) {
+                Move(1);
+                moved = true;
+            }
+
+            return moved;
+        }
 
         /// <inheritdoc />
         public void Rewind(int offset = 1)
@@ -293,9 +308,16 @@ namespace Meep.Tech.Collections {
         }
 
         /// <inheritdoc cref="IReadOnlyCursor{T}.Clone"/>
-        public TCursor Clone<TCursor>()
-            where TCursor : Cursor<T>
-            => (TCursor)Cloner();
+        public virtual TCursor Clone<TCursor>()
+            where TCursor : Cursor<T> {
+            TCursor cursor = (TCursor)CloneConstructor();
+
+            cursor.Index = Index;
+            cursor.HasReachedEnd = HasReachedEnd;
+            cursor.Memory = _buffer;
+
+            return cursor;
+        }
 
         #region Explicit Implementations
 
@@ -309,7 +331,7 @@ namespace Meep.Tech.Collections {
             => this[index] ?? throw new IndexOutOfRangeException();
 
         Cursor<T> IReadOnlyCursor<T>.Clone()
-            => Cloner();
+            => Clone<Cursor<T>>();
 
         IEnumerator IEnumerable.GetEnumerator()
             => GetEnumerator();
