@@ -205,7 +205,7 @@ namespace Meep.Tech.Collections {
         /// <summary>
         /// Skips to the next non-whitespace character.
         /// </summary> 
-        public bool SkipWhitespace(bool skipNulls = true)
+        public bool SkipWhiteSpace(bool skipNulls = true)
             => skipNulls
                 ? Skip(char.IsWhiteSpace)
                 : Skip(CharExtensions.IsWhiteSpaceOrNull);

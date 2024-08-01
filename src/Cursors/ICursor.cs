@@ -53,6 +53,21 @@ namespace Meep.Tech.Collections {
         bool Read([NotNull] T match);
 
         /// <summary>
+        /// Pushes the head past the next element in the source if it matches the given predicate.
+        /// </summary>
+        /// <param name="predicate">The predicate to match against the current head of the cursor.</param>
+        /// <returns>True if the head was moved past the matching element; False otherwise.</returns>
+        bool Read([NotNull] Predicate<T> predicate);
+
+
+        /// <summary>
+        /// Pushes the head past the next element in the source if it matches the given predicate.
+        /// </summary>
+        /// <param name="predicate">The predicate to match against the current head of the cursor.</param>
+        /// <param name="match">The element the cursor read over in this call. Null if there are no elements left to read.</param> 
+        bool Read([NotNullWhen(true)] out IEnumerable<T>? match, [NotNull] Predicate<T> predicate);
+
+        /// <summary>
         /// Try to move the cursor head forward by one if the next element matches the given value(s).
         /// </summary>
         /// <returns>True if the head was moved past the matching element; False otherwise.</returns>
@@ -79,6 +94,21 @@ namespace Meep.Tech.Collections {
         /// <returns>True if the head was moved past the matching element; False otherwise.</returns>
         bool ReadNext([NotNull] T match);
 
+        /// <summary>
+        /// Try to move the cursor head forward by one if the next element matches the given predicate.
+        /// </summary>
+        /// <param name="predicate">The predicate to match against the next element of the cursor.</param>
+        /// <returns>True if the head was moved past the matching element; False otherwise.</returns>
+        bool ReadNext([NotNull] Predicate<T> predicate);
+
+        /// <summary>
+        /// Try to move the cursor head forward by one if the next element matches the given predicate.
+        /// </summary>
+        /// <param name="predicate">The predicate to match against the next element of the cursor.</param>
+        /// <param name="match">The element the cursor read over in this call. Null if there are no elements left to read.</param>  
+        /// <returns>True if the head was moved past the matching element; False otherwise.</returns>
+        bool ReadNext([NotNullWhen(true)] out IEnumerable<T>? match, [NotNull] Predicate<T> predicate);
+
         #endregion
 
         #region Move [Next], Skip, and Rewind
@@ -100,7 +130,7 @@ namespace Meep.Tech.Collections {
         /// Move the cursor head forward by a specified number of elements.
         /// <para>- Alias for <see cref="Move(int)"/> with a positive offset.</para>
         /// </summary>
-        void Skip(int count = 1);
+        bool Skip(int count = 1);
 
         /// <summary>
         /// Move the cursor head back by a specified number of elements.

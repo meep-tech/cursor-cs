@@ -149,6 +149,26 @@ namespace Meep.Tech.Collections {
         }
 
         /// <inheritdoc />
+        public bool Read([NotNull] Predicate<T> predicate)
+            => predicate(Current)
+            && Move(1);
+
+        /// <inheritdoc />
+        public bool Read([NotNullWhen(true)] out IEnumerable<T>? match, [NotNull] Predicate<T> predicate) {
+            List<T> matches = [];
+            while(predicate(Current)) {
+                matches.Add(Current);
+                Move(1);
+            }
+
+            match = matches.Count > 0
+                ? matches
+                : default;
+
+            return match is not null;
+        }
+
+        /// <inheritdoc />
         public bool Read([NotNull] T match)
             => match.Equals(Current)
             && Move(1);
@@ -204,6 +224,26 @@ namespace Meep.Tech.Collections {
                 ? Move(1)
                 : matches.Contains(Next)
                     && Move(1);
+
+        /// <inheritdoc />
+        public bool ReadNext([NotNull] Predicate<T> predicate)
+            => predicate(Next ?? default!)
+            && Move(1);
+
+        /// <inheritdoc />
+        public bool ReadNext([NotNullWhen(true)] out IEnumerable<T>? match, [NotNull] Predicate<T> predicate) {
+            List<T> matches = new();
+            while(predicate(Next ?? default!)) {
+                matches.Add(Next!);
+                Move(1);
+            }
+
+            match = matches.Count > 0
+                ? matches
+                : default;
+
+            return match is not null;
+        }
 
         /// <inheritdoc />
         public bool Skip(int count = 1)
