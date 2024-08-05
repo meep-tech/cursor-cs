@@ -178,6 +178,30 @@ namespace Meep.Tech.Collections {
             return Move(match.Length);
         }
 
+        /// <inheritdoc cref="Cursor{T}.Read(out IEnumerable{T}, Predicate{T})" />
+        public virtual bool Read([NotNullWhen(true)] out char? match, Predicate<char> predicate) {
+            if(Read(out char prev, predicate)) {
+                match = prev;
+                return true;
+            }
+            else {
+                match = null;
+                return false;
+            }
+        }
+
+        /// <inheritdoc cref="Cursor{T}.Read(out IEnumerable{T}, Predicate{T})" />
+        public bool Read([NotNullWhen(true)] out string? match, Predicate<char> predicate) {
+            if(Read(out IEnumerable<char>? chars, predicate)) {
+                match = chars.Join();
+                return true;
+            }
+            else {
+                match = null;
+                return false;
+            }
+        }
+
         /// <inheritdoc cref="Cursor{T}.Read(T)"/>
         public bool ReadNext([NotNull] string match) {
             if(match.Length == 0) {

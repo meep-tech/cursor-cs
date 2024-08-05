@@ -181,12 +181,23 @@ namespace Meep.Tech.Collections {
                     && Move(1);
 
         /// <inheritdoc />
-        public bool Read([NotNullWhen(true)] out T? prev, params T[] matches) {
+        public bool Read([NotNullWhen(true)] out T? match, params T[] matches) {
             if(matches.Contains(Current)) {
-                return Read(out prev);
+                return Read(out match);
             }
             else {
-                prev = default;
+                match = default;
+                return false;
+            }
+        }
+
+        /// <inheritdoc />
+        public bool Read([NotNullWhen(true)] out T? match, [NotNull] Predicate<T> predicate) {
+            if(predicate(Current)) {
+                return Read(out match);
+            }
+            else {
+                match = default;
                 return false;
             }
         }

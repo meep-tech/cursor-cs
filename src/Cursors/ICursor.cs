@@ -49,6 +49,14 @@ namespace Meep.Tech.Collections {
         /// <summary>
         /// Pushes the head past the next element in the source if it matches the given element.
         /// </summary>
+        /// <param name="match">The element to match against the current head of the cursor.</param>
+        /// <param name="predicate">The predicate to match against the current head of the cursor.</param>
+        /// <returns>True if the head was moved past the matching element; False otherwise.</returns>
+        bool Read([NotNullWhen(true)] out T? match, [NotNull] Predicate<T> predicate);
+
+        /// <summary>
+        /// Pushes the head past the next element in the source if it matches the given element.
+        /// </summary>
         /// <returns>True if the head was moved past the matching element; False otherwise.</returns>
         bool Read([NotNull] T match);
 
