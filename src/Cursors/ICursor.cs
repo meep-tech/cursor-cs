@@ -21,7 +21,12 @@ namespace Meep.Tech.Collections {
         : IReadOnlyCursor<T>
         where T : notnull {
 
-        #region Read [Next]
+        #region Read [Next] [While]
+
+        /// <summary>
+        /// Reads the next element in the source, and moves the cursor head to the next element, returning the previous (read) element.
+        /// </summary>
+        T Read();
 
         /// <summary>
         /// Moves the cursor head to the next element in the source, and returns the previous one.
@@ -34,17 +39,17 @@ namespace Meep.Tech.Collections {
         /// <summary>
         /// Pushes the head past the next element in the source if it matches any of the given elements.
         /// </summary>
-        /// <param name="matches">The elements to match against the current head of the cursor.</param>
+        /// <param name="options">The elements to match against the current head of the cursor.</param>
         /// <returns>True if the head was moved past a matching element; False otherwise.</returns>
-        bool Read(params T[] matches);
+        bool Read(params T[] options);
 
         /// <summary>
         /// <inheritdoc cref="Read(T[])"/>
         /// </summary>
         /// <param name="prev">The previous element the cursor read over in this call. Null if there are no elements left to read.</param>
-        /// <param name="matches">The elements to match against the current head of the cursor.</param>
+        /// <param name="options">The elements to match against the current head of the cursor.</param>
         /// <returns>True if the cursor was able to move; False if the cursor has reached the end of the source.</returns>
-        bool Read([NotNullWhen(true)] out T? prev, params T[] matches);
+        bool Read([NotNullWhen(true)] out T? prev, params T[] options);
 
         /// <summary>
         /// Pushes the head past the next element in the source if it matches the given element.
@@ -52,7 +57,10 @@ namespace Meep.Tech.Collections {
         /// <param name="match">The element to match against the current head of the cursor.</param>
         /// <param name="predicate">The predicate to match against the current head of the cursor.</param>
         /// <returns>True if the head was moved past the matching element; False otherwise.</returns>
-        bool Read([NotNullWhen(true)] out T? match, [NotNull] Predicate<T> predicate);
+        bool Read([NotNullWhen(true)] out T? match, params Predicate<T>[] predicate);
+
+        /// <inheritdoc cref="Read(out T, Predicate{T}[])"/>
+        bool Read([NotNull] Predicate<T> predicate, [NotNullWhen(true)] out T? match);
 
         /// <summary>
         /// Pushes the head past the next element in the source if it matches the given element.
@@ -65,15 +73,32 @@ namespace Meep.Tech.Collections {
         /// </summary>
         /// <param name="predicate">The predicate to match against the current head of the cursor.</param>
         /// <returns>True if the head was moved past the matching element; False otherwise.</returns>
-        bool Read([NotNull] Predicate<T> predicate);
-
+        bool Read(params Predicate<T>[] predicate);
 
         /// <summary>
-        /// Pushes the head past the next element in the source if it matches the given predicate.
+        /// Reads all elements from the source that match the given options until one does not.
+        ///    (The cursor's current value will be left as the first non-matching element.) 
+        /// </summary>
+        /// <param name="options">The elements to match against the current head of the cursor.</param>
+        /// <param name="matches">The elements the cursor read over in this call. Null if there are no elements left to read.</param>
+        bool ReadWhile([NotNullWhen(true)] out IEnumerable<T>? matches, params T[] options);
+
+        /// <inheritdoc cref="ReadWhile(out IEnumerable{T}, T[])"/>
+        bool ReadWhile([NotNull] T[] options, [NotNullWhen(true)] out IEnumerable<T>? matches);
+
+        /// <inheritdoc cref="ReadWhile(out IEnumerable{T}, T[])"/>
+        bool ReadWhile([NotNull] T value, [NotNullWhen(true)] out IEnumerable<T>? matches);
+
+        /// <summary>
+        /// Reads all elements from the source that match the given predicate until one does not. 
+        ///     (The cursor's current value will be left as the first non-matching element.)
         /// </summary>
         /// <param name="predicate">The predicate to match against the current head of the cursor.</param>
-        /// <param name="match">The element the cursor read over in this call. Null if there are no elements left to read.</param> 
-        bool Read([NotNullWhen(true)] out IEnumerable<T>? match, [NotNull] Predicate<T> predicate);
+        /// <param name="match">The elements the cursor read over in this call. Null if there are no elements left to read.</param> 
+        bool ReadWhile([NotNull] Predicate<T> predicate, [NotNullWhen(true)] out IEnumerable<T>? match);
+
+        /// <inheritdoc cref="ReadWhile(Predicate{T}, out IEnumerable{T})"/>
+        bool ReadWhile([NotNullWhen(true)] out IEnumerable<T>? match, params Predicate<T>[] predicate);
 
         /// <summary>
         /// Try to move the cursor head forward by one if the next element matches the given value(s).
@@ -93,8 +118,8 @@ namespace Meep.Tech.Collections {
         /// <inheritdoc cref="ReadNext(T[])" path="/summary"/>
         /// </summary>
         /// <param name="prev">The element the cursor read over in this call. Null if there are no elements left to read.</param>
-        /// <param name="matches">The values to match against the current head of the cursor.</param>
-        public bool ReadNext([NotNullWhen(true)] out T? prev, params T[] matches);
+        /// <param name="options">The values to match against the current head of the cursor.</param>
+        public bool ReadNext([NotNullWhen(true)] out T? prev, params T[] options);
 
         /// <summary>
         /// Try to move the cursor head forward by one if the next element matches the given value.
@@ -107,19 +132,29 @@ namespace Meep.Tech.Collections {
         /// </summary>
         /// <param name="predicate">The predicate to match against the next element of the cursor.</param>
         /// <returns>True if the head was moved past the matching element; False otherwise.</returns>
-        bool ReadNext([NotNull] Predicate<T> predicate);
+        bool ReadNext(params Predicate<T>[] predicate);
 
         /// <summary>
-        /// Try to move the cursor head forward by one if the next element matches the given predicate.
+        /// Try to move the cursor head forward until the next element does not match any of the given values.
+        /// </summary>
+        /// <param name="match">The element the cursor read over in this call. Null if there are no elements left to read.</param>
+        /// <param name="options">The elements to match against the current head of the cursor.</param>
+        bool ReadNextWhile([NotNullWhen(true)] out IEnumerable<T>? match, params T[] options);
+
+        /// <summary>
+        /// Try to move the cursor head forward until the next element does not match the given value.
         /// </summary>
         /// <param name="predicate">The predicate to match against the next element of the cursor.</param>
-        /// <param name="match">The element the cursor read over in this call. Null if there are no elements left to read.</param>  
+        /// <param name="matches">The element the cursor read over in this call. Null if there are no elements left to read.</param>  
         /// <returns>True if the head was moved past the matching element; False otherwise.</returns>
-        bool ReadNext([NotNullWhen(true)] out IEnumerable<T>? match, [NotNull] Predicate<T> predicate);
+        bool ReadNextWhile([NotNullWhen(true)] out IEnumerable<T>? matches, params Predicate<T>[] predicate);
+
+        /// <inheritdoc cref="ReadNextWhile(Predicate{T}, out IEnumerable{T})"/>
+        bool ReadNextWhile([NotNull] Predicate<T> predicate, [NotNullWhen(true)] out IEnumerable<T>? matches);
 
         #endregion
 
-        #region Move [Next], Skip, and Rewind
+        #region Move [Next], Skip[While|Until], and Rewind
 
         /// <summary>
         /// Move the cursor head in either direction by a specified number of elements.
@@ -139,6 +174,38 @@ namespace Meep.Tech.Collections {
         /// <para>- Alias for <see cref="Move(int)"/> with a positive offset.</para>
         /// </summary>
         bool Skip(int count = 1);
+
+        /// <summary>
+        /// Skip the current value and move the cursor head forward by one if the next element matches the given value(s).
+        /// </summary>
+        /// <param name="options"></param>
+        /// <returns></returns>
+        bool Skip(params T[] options);
+
+        /// <summary>
+        /// Skip the current value and move the cursor head forward by one if the next element matches the given predicate(s).
+        /// </summary>
+        bool Skip(params Predicate<T>[] predicate);
+
+        /// <summary>
+        /// Move the cursor head forward until the next element does not match any of the given values.
+        /// </summary>
+        bool SkipWhile(params Predicate<T>[] predicate);
+
+        /// <summary>
+        /// Move the cursor head forward until the next element does not match any of the given values.
+        /// </summary>
+        bool SkipWhile(params T[] options);
+
+        /// <summary>
+        /// Move the cursor head forward until the next element does not match any of the given values.
+        /// </summary>
+        bool SkipUntil(params Predicate<T>[] predicate);
+
+        /// <summary>
+        /// Move the cursor head forward until the next element does not match any of the given values.
+        /// </summary>
+        bool SkipUntil(params T[] options);
 
         /// <summary>
         /// Move the cursor head back by a specified number of elements.

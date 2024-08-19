@@ -137,6 +137,12 @@ namespace Meep.Tech.Collections {
             => Peek(-offset);
 
         /// <inheritdoc />
+        public T Read()
+            => Move()
+                ? Current
+                : default!;
+
+        /// <inheritdoc />
         public bool Read([NotNullWhen(true)] out T? prev) {
             if(Move(1)) {
                 prev = Previous!;
@@ -146,26 +152,6 @@ namespace Meep.Tech.Collections {
                 prev = default;
                 return false;
             }
-        }
-
-        /// <inheritdoc />
-        public bool Read([NotNull] Predicate<T> predicate)
-            => predicate(Current)
-            && Move(1);
-
-        /// <inheritdoc />
-        public bool Read([NotNullWhen(true)] out IEnumerable<T>? match, [NotNull] Predicate<T> predicate) {
-            List<T> matches = [];
-            while(predicate(Current)) {
-                matches.Add(Current);
-                Move(1);
-            }
-
-            match = matches.Count > 0
-                ? matches
-                : default;
-
-            return match is not null;
         }
 
         /// <inheritdoc />
@@ -179,6 +165,33 @@ namespace Meep.Tech.Collections {
                 ? Move(1)
                 : matches.Contains(Current)
                     && Move(1);
+
+        /// <inheritdoc />
+        public bool Read(params Predicate<T>[] predicate)
+            => predicate.Any(p => p(Current))
+            && Move(1);
+
+        /// <inheritdoc />
+        public bool Read([NotNullWhen(true)] out T? match, params Predicate<T>[] predicate) {
+            if(predicate.Any(option => option(Current))) {
+                return Read(out match);
+            }
+            else {
+                match = default;
+                return false;
+            }
+        }
+
+        /// <inheritdoc />
+        public bool Read([NotNull] Predicate<T> predicate, [NotNullWhen(true)] out T? match) {
+            if(predicate(Current)) {
+                return Read(out match);
+            }
+            else {
+                match = default;
+                return false;
+            }
+        }
 
         /// <inheritdoc />
         public bool Read([NotNullWhen(true)] out T? match, params T[] matches) {
@@ -201,6 +214,48 @@ namespace Meep.Tech.Collections {
                 return false;
             }
         }
+
+        /// <inheritdoc />
+        public bool ReadWhile([NotNullWhen(true)] out IEnumerable<T>? match, params Predicate<T>[] predicate) {
+            List<T> matches = [];
+            while(predicate.Any(option => option(Current))) {
+                matches.Add(Current);
+                Move(1);
+            }
+
+            match = matches.Count > 0
+                ? matches
+                : default;
+
+            return match is not null;
+        }
+
+        /// <inheritdoc />
+        public bool ReadWhile([NotNull] Predicate<T> predicate, [NotNullWhen(true)] out IEnumerable<T>? match)
+            => ReadWhile(out match, predicate);
+
+        /// <inheritdoc />
+        public bool ReadWhile([NotNullWhen(true)] out IEnumerable<T>? match, params T[] options) {
+            List<T> found = [];
+            while(options.Contains(Current)) {
+                found.Add(Current);
+                Move(1);
+            }
+
+            match = found.Count > 0
+                ? found
+                : default;
+
+            return match is not null;
+        }
+
+        /// <inheritdoc />
+        public bool ReadWhile([NotNull] T[] options, [NotNullWhen(true)] out IEnumerable<T>? match)
+            => ReadWhile(out match, options);
+
+        /// <inheritdoc />
+        public bool ReadWhile([NotNull] T value, [NotNullWhen(true)] out IEnumerable<T>? match)
+            => ReadWhile(out match, value);
 
         /// <inheritdoc />
         public bool ReadNext([NotNull] T match)
@@ -237,14 +292,14 @@ namespace Meep.Tech.Collections {
                     && Move(1);
 
         /// <inheritdoc />
-        public bool ReadNext([NotNull] Predicate<T> predicate)
-            => predicate(Next ?? default!)
+        public bool ReadNext(params Predicate<T>[] predicate)
+            => predicate.Any(p => p(Next ?? default!))
             && Move(1);
 
         /// <inheritdoc />
-        public bool ReadNext([NotNullWhen(true)] out IEnumerable<T>? match, [NotNull] Predicate<T> predicate) {
+        public bool ReadNextWhile([NotNullWhen(true)] out IEnumerable<T>? match, params Predicate<T>[] predicate) {
             List<T> matches = new();
-            while(predicate(Next ?? default!)) {
+            while(predicate.Any(option => option(Next ?? default!))) {
                 matches.Add(Next!);
                 Move(1);
             }
@@ -257,13 +312,87 @@ namespace Meep.Tech.Collections {
         }
 
         /// <inheritdoc />
+        public bool ReadNextWhile([NotNull] Predicate<T> predicate, [NotNullWhen(true)] out IEnumerable<T>? match)
+            => ReadNextWhile(out match, predicate);
+
+        /// <inheritdoc />
+        public bool ReadNextWhile([NotNullWhen(true)] out IEnumerable<T>? match, params T[] options) {
+            List<T> found = new();
+            while(options.Contains(Next)) {
+                found.Add(Next!);
+                Move(1);
+            }
+
+            match = found.Count > 0
+                ? found
+                : default;
+
+            return match is not null;
+        }
+
+        /// <inheritdoc />
         public bool Skip(int count = 1)
             => Move(count);
 
         /// <inheritdoc />
-        public bool Skip(Func<T, bool> predicate) {
+        public bool Skip(params T[] options) {
             bool moved = false;
-            while(predicate(Current)) {
+            if(options.Contains(Current)) {
+                Move(1);
+                moved = true;
+            }
+
+            return moved;
+        }
+
+        /// <inheritdoc />
+        public bool Skip(params Predicate<T>[] predicate) {
+            bool moved = false;
+            if(predicate.Any(p => p(Current))) {
+                Move(1);
+                moved = true;
+            }
+
+            return moved;
+        }
+
+        /// <inheritdoc />
+        public bool SkipWhile(params Predicate<T>[] predicate) {
+            bool moved = false;
+            while(predicate.Any(p => p(Current))) {
+                Move(1);
+                moved = true;
+            }
+
+            return moved;
+        }
+
+        /// <inheritdoc />
+        public bool SkipWhile(params T[] options) {
+            bool moved = false;
+            while(options.Contains(Current)) {
+                Move(1);
+                moved = true;
+            }
+
+            return moved;
+        }
+
+        /// <inheritdoc />
+        public bool SkipUntil(params Predicate<T>[] predicate) {
+            bool moved = false;
+            while(predicate.All(p => !p(Current))) {
+                Move(1);
+                moved = true;
+            }
+
+            return moved;
+        }
+
+        /// <inheritdoc />
+        public bool SkipUntil(params T[] options) {
+            bool moved = false;
+            while(!options.Contains(Current)) {
                 Move(1);
                 moved = true;
             }
@@ -351,7 +480,7 @@ namespace Meep.Tech.Collections {
                 yield return Current!;
             }
 
-            while(Read()) {
+            while(Move()) {
                 _buffer.Add(Current!);
                 Index++;
                 yield return Next!;
